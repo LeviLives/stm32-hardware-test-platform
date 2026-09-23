@@ -49,7 +49,7 @@ Levi reported on September 22 that the UART implementation, connection, and comm
 - Build: the current source, including the explanatory comments added after the hardware session, was rebuilt from the saved Debug configuration on September 22. Compilation and linking completed with zero errors and zero warnings. A separate build screenshot has not been saved.
 - Flash: reported complete by Levi for the tested UART firmware. The later comment-only source edit did not change executable statements, but that edited snapshot has not been reflashed as a separate hardware test.
 - Terminal responses: the [terminal capture](../images_videos/2026-09-22_uart_terminal.png) visibly contains `READY`, `STATUS pwm=0 enabled=0`, `OK PWM=25`, `STATUS pwm=25 enabled=1`, `ERR command`, `ERR range`, and `OK PWM=0`.
-- Physical behavior: the [13.9-second UART demonstration](../images_videos/2026-09-22_uart_led_control.MOV) frames the terminal and external breadboard LED together. The response sequence progresses through 0%, 25%, 100%, and 0%; the LED is initially OFF, becomes visibly illuminated at the nonzero settings, and returns OFF after the final zero response.
+- Physical behavior: the [13.9-second UART demonstration](../images_videos/2026-09-22_uart_led_control.mp4?raw=1) frames the terminal and external breadboard LED together. The response sequence progresses through 0%, 25%, 100%, and 0%; the LED is initially OFF, becomes visibly illuminated at the nonzero settings, and returns OFF after the final zero response.
 - Invalid-command and range-error tests: the screenshot and video visibly include `ERR command` and `ERR range`. Because macOS `screen` did not locally echo typed characters, the captures show firmware responses rather than the corresponding input text. The exact input association is retained from Levi's test report and the implemented parser.
 - New electrical measurements: not performed or supplied for this UART session. The earlier [PWM validation](pwm_validation.md) contains the prior PB10 DC-average measurements and must not be presented as new UART-session measurements.
 
@@ -58,7 +58,7 @@ The milestone is **functionally complete with archived terminal and physical-loa
 ## Preserved Evidence
 
 - [UART terminal response capture](../images_videos/2026-09-22_uart_terminal.png): records startup readiness, initial and 25% status, accepted PWM/OFF responses, a malformed-command error, and an out-of-range error.
-- [UART terminal and LED demonstration](../images_videos/2026-09-22_uart_led_control.MOV): 13.9-second continuous phone video framing both the response terminal and the external LED while the output moves through zero and nonzero PWM settings. Embedded phone location and device metadata were removed without re-encoding the audio or video streams.
+- [UART terminal and LED demonstration](../images_videos/2026-09-22_uart_led_control.mp4?raw=1): 13.9-second continuous phone video framing both the response terminal and the external LED while the output moves through zero and nonzero PWM settings. The public copy was re-encoded to a 6.6 MB MP4 and stripped of phone location and device metadata.
 - [CubeIDE Terminal choices](../images_videos/2026-09-22_cubeide_terminal_choices.png): records why the macOS `screen` workaround was used.
 - Saved firmware and configuration: record the USART2 setup, parser, responses, and load-control calls.
 - Local rebuild after the explanatory comment edit: zero errors and zero warnings.

@@ -58,7 +58,7 @@ The UART interface lets the output change while the firmware is running. There i
 | `PWM 101` | `ERR range` | Reject an out-of-range request |
 | Unknown text | `ERR command` | Reject a malformed command |
 
-[![UART responses for accepted and rejected commands](docs/images_videos/2026-09-22_uart_terminal.png)](docs/images_videos/2026-09-22_uart_led_control.MOV)
+[![UART responses for accepted and rejected commands](docs/images_videos/2026-09-22_uart_terminal.png)](docs/images_videos/2026-09-22_uart_led_control.mp4?raw=1)
 
 **Click the terminal image to open the 13.9-second demonstration video.** The video shows the terminal responses and external LED together while the output moves through 0%, 25%, 100%, and back to 0%.
 

@@ -1,0 +1,5 @@
+.DS_Store
+output/
+**/Debug/
+**/Release/
+**/.settings/com.st.stm32cube.ide.mcu.sfrview.prefs

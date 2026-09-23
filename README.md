@@ -1,67 +1,131 @@
-# Embedded Hardware Test & Control Platform
+# Embedded Hardware Test and Control Platform
 
-An embedded hardware test-and-control project built around the NUCLEO-F446RE. The current prototype demonstrates a MOSFET-switched external LED, modular C load control, hardware-timer PWM checked with a multimeter and ST-Link debugger, and UART commands from a computer. Sensor measurement and Python automation are planned extensions.
+An STM32-based platform for controlling an external electrical load, accepting commands from a computer, and recording repeatable validation evidence.
 
-## Validated Prototype
+**Built by Levi Guo** - Engineering Physics student in the Electrical Option at Queen's University, interested in embedded hardware, firmware, validation, and test automation. I am seeking a May 2027 internship in these areas.
 
-The same external LED circuit used for GPIO bring-up now supports percentage-based load commands:
+[LinkedIn](https://www.linkedin.com/in/levi-guo741/) | [GitHub profile](https://github.com/LeviLives) | [Portfolio](https://levilives.github.io/)
 
-```text
-macOS terminal -> ST-Link virtual COM -> USART2 command parser
-                                      -> TIM2/PB10 PWM -> 2N7000 -> external LED
+## Project at a Glance
+
+| Area | Current implementation |
+|---|---|
+| Controller | NUCLEO-F446RE with STM32F446RET6 MCU |
+| Load stage | Externally powered LED switched by a 2N7000 MOSFET |
+| Firmware | Modular embedded C using STM32 HAL |
+| Control | TIM2 hardware PWM and USART2 text commands |
+| Validation | DMM measurements, debugger state checks, terminal captures, photos, and video |
+| Current stage | GPIO, modular control, PWM, and UART verified; Python automation and sensing are next |
+
+The project began as a GPIO and MOSFET bring-up exercise. It now accepts live computer commands, controls output duty cycle without rebuilding the firmware, reports its commanded state, and rejects invalid input without changing the previous setting.
+
+## System Architecture
+
+```mermaid
+flowchart LR
+    PC[Computer terminal] -->|USB serial| VCP[ST-Link virtual COM port]
+    VCP -->|USART2 at 115200 baud| MCU[STM32F446RE]
+    MCU -->|TIM2 channel 3 PWM on PB10| MOSFET[2N7000 low-side switch]
+    MOSFET --> LOAD[Externally powered LED load]
 ```
 
-![STM32 and MOSFET breadboard prototype](docs/images_videos/mosfet_bringup.jpg)
+The MOSFET lets a 3.3 V microcontroller signal control a separately powered load. A gate pulldown keeps the load off while the MCU is starting or disconnected.
 
-TIM2 channel 3 is configured for nominal **1 kHz** using an 84 MHz timer clock, prescaler 83, and period 999. September 22 measurements at PB10 were:
+![STM32 Nucleo and MOSFET breadboard prototype](docs/images_videos/mosfet_bringup.jpg)
 
-| Commanded duty | Measured DC average |
-|---:|---:|
-| 0% | 0 V |
-| 25% | 0.82 V |
-| 50% | 1.64 V |
-| 75% | 2.46 V |
-| 100% | 3.28 V |
+## What Works Now
 
-The LED was OFF at 0% and lit at the nonzero settings. Intermediate averages match the proportions calculated from the measured 0 V / 3.28 V endpoints at the recorded precision. All five command-state checks and six ON/OFF, toggle, and limit checks were reported as consistent with expectations. No oscilloscope measurements were performed: frequency is configured, not measured, and the DC comparison is not an accuracy certification.
+- [x] Safe LOW output at startup
+- [x] External MOSFET and LED load switched from the STM32
+- [x] Modular load-control functions separated from `main.c`
+- [x] TIM2 channel 3 configured for nominal 1 kHz PWM
+- [x] Five PWM settings validated with DC measurements
+- [x] USART2 command interface at 115200 baud, 8N1
+- [x] `PWM`, `OFF`, and `STATUS` commands
+- [x] Malformed-command and range-error handling
+- [x] Terminal and physical LED behavior recorded together
 
-See the [PWM validation report](docs/lab_notes/pwm_validation.md) for calculations, observations, debugging, and limitations, or the [step-by-step guide](docs/pwm_walkthrough.md) to reproduce the tests.
+## UART Command Interface
 
-**Saved firmware behavior:** this revision initializes the load at 0%, sends `READY` over USART2 at 115200 baud, and waits for line-based commands. `PWM 0..100` selects the duty setting, `OFF` commands 0%, and `STATUS` reports the stored PWM and enabled state. Malformed and out-of-range requests return an error without applying a new setting.
+The UART interface lets the output change while the firmware is running. There is no need to edit, rebuild, and flash the program for every new duty setting.
 
-The [UART validation report](docs/lab_notes/2026-09-22_uart_commands.md) records the protocol, implementation, limitations, and results. The [terminal capture](docs/images_videos/2026-09-22_uart_terminal.png) shows startup, state, accepted-command, malformed-command, and range-error responses. A [13.9-second physical demonstration](docs/images_videos/2026-09-22_uart_led_control.MOV) frames the response terminal and external LED together while the output moves through 0%, 25%, 100%, and back to 0%. Typed commands are not visible because the macOS `screen` session did not use local echo.
+| Command | Example response | Result |
+|---|---|---|
+| `PWM 25` | `OK PWM=25` | Set the PWM command to 25% |
+| `PWM 100` | `OK PWM=100` | Set the PWM command to 100% |
+| `OFF` | `OK PWM=0` | Turn the load off |
+| `STATUS` | `STATUS pwm=25 enabled=1` | Report the stored command state |
+| `PWM 101` | `ERR range` | Reject an out-of-range request |
+| Unknown text | `ERR command` | Reject a malformed command |
 
-## Verified Status
+[![UART responses for accepted and rejected commands](docs/images_videos/2026-09-22_uart_terminal.png)](docs/images_videos/2026-09-22_uart_led_control.MOV)
 
-- [x] Repository folder structure created
-- [x] STM32CubeMX/CubeIDE project generated for `NUCLEO-F446RE`
-- [x] Onboard LED2 blink firmware builds and a Debug ELF exists
-- [x] ST-Link is detected when the Nucleo is connected through a USB hub
-- [x] Flash and visually confirm LED2 blink on the physical board
-- [x] Calculate and build the external 2N7000/LED circuit
-- [x] Measure GPIO, gate, drain, and LED current
-- [x] Verify the gate-pulldown safe state
-- [x] Add the breadboard photo and complete the bring-up lab note
-- [x] Make the first focused Git commit
-- [x] Validate the five modular load-control functions and record the final blink behavior ([September 8 evidence](docs/lab_notes/2026-09-08_load_control.md))
-- [x] Implement TIM2 PWM control and validate five duty settings with DC measurements
-- [x] Check PWM command-state reporting, ON/OFF, toggle, and request limits
-- [x] Flash and record the final repeating PWM demonstration
-- [x] Add USART2 commands for PWM, OFF, STATUS, malformed input, and range errors
-- [x] Control the physical LED from a computer and archive terminal and video evidence
+**Click the terminal image to open the 13.9-second demonstration video.** The video shows the terminal responses and external LED together while the output moves through 0%, 25%, 100%, and back to 0%.
 
-The MOSFET/LED bring-up has been physically verified and documented with
-measured voltage, current, resistor values, pull-down behavior, and media.
+## Measured Results
 
-## Planned Capabilities
+### MOSFET and load bring-up
 
-- Python CSV logger and automated PWM sweep
-- Periodic UART telemetry for automated logging
-- INA219 voltage/current sensing
-- Temperature and calculated-power telemetry
-- Safe fault shutdown and reset state machine
-- Altium schematic, PCB layout, BOM, and manufacturing outputs
-- Defined validation plan, measured results, plots, and demo material
+| Measurement | Recorded value |
+|---|---:|
+| External supply | 4.99 V |
+| MOSFET on-state drain-source voltage | 0.04 V |
+| LED branch current | 9.38 mA |
+| Measured series resistance | 321 ohm |
+
+### PWM validation at PB10
+
+TIM2 channel 3 uses an 84 MHz timer clock, prescaler 83, and period 999 for a configured frequency of 1 kHz.
+
+| Commanded duty | Expected DC average from 3.28 V endpoint | Measured DC average |
+|---:|---:|---:|
+| 0% | 0.00 V | 0.00 V |
+| 25% | 0.82 V | 0.82 V |
+| 50% | 1.64 V | 1.64 V |
+| 75% | 2.46 V | 2.46 V |
+| 100% | 3.28 V | 3.28 V |
+
+The intermediate DC readings follow the expected proportions at the recorded precision. These measurements support duty-cycle behavior, but a DMM average does not verify waveform frequency, rise time, or timing accuracy. The 1 kHz value is configured in firmware and has not yet been measured with an oscilloscope.
+
+## What I Built and Tested
+
+- Configured GPIO, TIM2 PWM, and USART2 in STM32CubeMX and STM32CubeIDE.
+- Wired the external LED, resistor, gate resistor, pulldown, MOSFET, external supply, and common ground.
+- Wrote modular C for load initialization, ON/OFF control, PWM settings, stored state, and command parsing.
+- Added input validation so unsupported or out-of-range commands leave the previous setting unchanged.
+- Measured the bring-up circuit and all five PWM settings with a digital multimeter.
+- Recorded test procedures, calculations, problems, limitations, screenshots, photos, and video in the repository.
+
+## Repository Guide
+
+- [`communications.c`](firmware/stm32_controller/Core/Src/communications.c) - receives complete UART lines, parses commands, and sends responses.
+- [`control.c`](firmware/stm32_controller/Core/Src/control.c) - owns the load state and applies PWM requests.
+- [`main.c`](firmware/stm32_controller/Core/Src/main.c) - initializes the peripherals and repeatedly services the command interface.
+- [`stm32_controller.ioc`](firmware/stm32_controller/stm32_controller.ioc) - source configuration for MCU pins, clocks, timers, and USART2.
+- [`led_current.md`](hardware/calculations/led_current.md) - load-current calculation and assumptions.
+- [`PWM validation report`](docs/lab_notes/pwm_validation.md) - measurements, expected values, debugging, and limitations.
+- [`UART validation report`](docs/lab_notes/2026-09-22_uart_commands.md) - protocol and physical demonstration evidence.
+- [`PWM walkthrough`](docs/pwm_walkthrough.md) - step-by-step explanation of the timer implementation.
+
+## Running the Demonstration
+
+1. Open `firmware/stm32_controller/` in STM32CubeIDE.
+2. Build and flash the project to a NUCLEO-F446RE.
+3. Connect to the ST-Link virtual serial port at 115200 baud, 8 data bits, no parity, and 1 stop bit.
+4. Wait for `READY`, then send commands such as `STATUS`, `PWM 25`, `PWM 100`, and `OFF`.
+5. Confirm each terminal response and the corresponding external LED behavior.
+
+The serial-device name varies by computer. On macOS, it normally appears under `/dev/cu.usbmodem*`.
+
+## Next Engineering Steps
+
+1. Add a Python serial logger and automated PWM sweep.
+2. Stream periodic telemetry for CSV capture and plots.
+3. Add INA219 voltage and current sensing.
+4. Add temperature sensing and calculated power.
+5. Implement fault thresholds, safe shutdown, and reset behavior.
+6. Capture PWM timing with an oscilloscope.
+7. Move the validated design into an Altium schematic and PCB layout.
 
 ## Public Repository Scope
 

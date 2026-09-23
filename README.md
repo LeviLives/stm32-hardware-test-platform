@@ -35,7 +35,7 @@ The MOSFET lets a 3.3 V microcontroller signal control a separately powered load
 
 Video of demo
 
-![STM32 Nucleo and MOSFET breadboard prototype](docs/images_videos/2026-09-22_uart_led_control.mp4)
+https://github.com/user-attachments/assets/01c001ff-0083-445e-8244-adac28b136f3 
 
 ## What Works Now
 
